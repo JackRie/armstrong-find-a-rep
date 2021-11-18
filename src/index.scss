@@ -1,0 +1,32 @@
+.armfr-container {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+#rep-form {
+	flex: 1;
+	margin-right: 2rem;
+	label {
+		display: block;
+	}
+	.field-container {
+		margin-bottom: 1rem;
+		input,
+		select {
+			width: 100%;
+		}
+	}
+}
+.results {
+	flex: 1;
+}
+.rep {
+	margin: 1rem 0;
+	p {
+		margin: 0;
+	}
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
