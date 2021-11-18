@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Armstrong Find a Rep Plugin
- * Plugin URI:        https://example.com/plugins/the-basics/
+ * Plugin URI:        https://github.com/JackRie/armstrong-find-a-rep
  * Description:       This plugin provides a form for users to fill out. Once the form is completed it checks Armstrong's Salesforce CRM and sends back the rep that best matches the user's needs.
  * Version:           1.0.0
  * Requires at least: 5.2
@@ -10,7 +10,7 @@
  * Author URI:        https://fairlypainless.com/
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Update URI:        https://example.com/my-plugin/
+ * Update URI:        https://github.com/JackRie/armstrong-find-a-rep
  * Text Domain:       arm-fr
  * Domain Path:       /languages
  */
