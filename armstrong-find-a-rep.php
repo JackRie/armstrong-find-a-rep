@@ -31,7 +31,7 @@ class ArmstrongFindARep {
     }
 
     function styles_and_scripts() {
-        wp_enqueue_script('arm-fr-script', ARMFR_URL . '/build/index.js', array('wp-element'), 1.2, true);
+        wp_register_script('arm-fr-script', ARMFR_URL . '/build/index.js', array('wp-element'), 1.2, true);
         wp_localize_script('arm-fr-script', 'armObj', array(
             'urls' => array(
                 'proxyTest' => rest_url('armstrong-international/v1/proxy-token'),
@@ -39,7 +39,7 @@ class ArmstrongFindARep {
               ),
               'nonce' => wp_create_nonce('wp_rest'),
         ));
-        wp_enqueue_style('arm-fr-style', ARMFR_URL . '/build/index.css');
+        wp_register_style('arm-fr-style', ARMFR_URL . '/build/index.css');
     }
 
     function settings_fields() {
@@ -107,7 +107,8 @@ class ArmstrongFindARep {
 
     function form_shortcode() {
         $output = '<div id="find-a-rep"></div>';
-
+        wp_enqueue_script('arm-fr-script', ARMFR_URL . '/build/index.js', array('wp-element'), 1.2, true);
+        wp_enqueue_style('arm-fr-style', ARMFR_URL . '/build/index.css');
         return $output;
     }
     //Helpful Article: https://ghostinspector.com/blog/develop-wordpress-plugin-with-webpack-and-react/
