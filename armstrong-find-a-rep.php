@@ -38,41 +38,43 @@ class ArmstrongFindARep {
                 'proxy'     => rest_url('armstrong-international/v1/proxy'),
               ),
               'nonce' => wp_create_nonce('wp_rest'),
+              'productLines' => get_option('arm-fr-product-line'),
+              'industries' => get_option('arm-fr-industry')
         ));
         wp_register_style('arm-fr-style', ARMFR_URL . '/build/index.css');
     }
 
     function settings_fields() {
-        add_settings_section( 'arm-fr_section', null, null, 'arm-fr-settings-page' );
+        // API Call Settings
+        add_settings_section( 'arm-fr_section', "API Settings", null, 'arm-fr-settings-page' );
         // Grant Type
-        add_settings_field('arm-fr-grant-type', 'Grant Type', array($this, 'grantTypeHtml'), 'arm-fr-settings-page', 'arm-fr_section');
+        add_settings_field('arm-fr-grant-type', 'Grant Type', array($this, 'textInputHtml'), 'arm-fr-settings-page', 'arm-fr_section', array('name' => 'arm-fr-grant-type'));
         register_setting('armfrplugin', 'arm-fr-grant-type', array('sanitize_callback' => 'sanitize_text_field', 'default' => NULL));
         // Client ID
-        add_settings_field('arm-fr-client-id', 'Client ID', array($this, 'clientIdHtml'), 'arm-fr-settings-page', 'arm-fr_section');
+        add_settings_field('arm-fr-client-id', 'Client ID', array($this, 'textInputHtml'), 'arm-fr-settings-page', 'arm-fr_section', array('name' => 'arm-fr-client-id'));
         register_setting('armfrplugin', 'arm-fr-client-id', array('sanitize_callback' => 'sanitize_text_field', 'default' => NULL));
         // Client Secret
-        add_settings_field('arm-fr-client-secret', 'Client Secret', array($this, 'clientSecretHtml'), 'arm-fr-settings-page', 'arm-fr_section');
+        add_settings_field('arm-fr-client-secret', 'Client Secret', array($this, 'textInputHtml'), 'arm-fr-settings-page', 'arm-fr_section', array('name' => 'arm-fr-client-secret'));
         register_setting('armfrplugin', 'arm-fr-client-secret', array('sanitize_callback' => 'sanitize_text_field', 'default' => NULL));
         // Username
         add_settings_field('arm-fr-username', 'Username', array($this, 'usernameHtml'), 'arm-fr-settings-page', 'arm-fr_section');
         register_setting('armfrplugin', 'arm-fr-username', array('sanitize_callback' => 'sanitize_email', 'default' => NULL));
         // Password
-        add_settings_field('arm-fr-password', 'Password', array($this, 'passwordHtml'), 'arm-fr-settings-page', 'arm-fr_section');
+        add_settings_field('arm-fr-password', 'Password', array($this, 'textInputHtml'), 'arm-fr-settings-page', 'arm-fr_section', array('name' => 'arm-fr-password'));
         register_setting('armfrplugin', 'arm-fr-password', array('sanitize_callback' => 'sanitize_text_field', 'default' => NULL));
+
+        // Form Settings
+        add_settings_section( 'arm-fr_section_form', 'Form Settings', null, 'arm-fr-settings-page' );
+        // Product Line 
+        add_settings_field('arm-fr-product-line', 'Product Lines', array($this, 'productLineHTML'), 'arm-fr-settings-page', 'arm-fr_section_form', array('productLineValues' => array('Ancillary Products', 'Flow Measurement', 'Heat Transfer', 'Hot Water', 'Humidification', 'Pressure & Temperature / Control Valves', 'Service', 'Smart Product', 'Steam & Condensate') ));
+        register_setting('armfrplugin', 'arm-fr-product-line', array($this, 'validateOptions'));
+        // Industries
+        add_settings_field('arm-fr-industry', 'Industries', array($this, 'industriesHTML'), 'arm-fr-settings-page', 'arm-fr_section_form', array('industryValues' => array('Cannabis', 'Chemical Refining', 'Data Center', 'Education', 'Food & Beverage', 'Government', 'Healthcare', 'Hospitality', 'Pharmaceutical', 'Other') ));
+        register_setting('armfrplugin', 'arm-fr-industry', array($this, 'validateOptions'));
     }
 
-    function grantTypeHtml() { ?>
-        <input type="text" name="arm-fr-grant-type" value="<?php echo esc_attr(get_option('arm-fr-grant-type'));?>">
-    <?php
-    }
-
-    function clientIdHtml() { ?>
-        <input type="text" name="arm-fr-client-id" value="<?php echo esc_attr(get_option('arm-fr-client-id'));?>">
-    <?php
-    }
-
-    function clientSecretHtml() { ?>
-        <input type="text" name="arm-fr-client-secret" value="<?php echo esc_attr(get_option('arm-fr-client-secret'));?>">
+    function textInputHtml($args) { ?>
+        <input type="text" name="<?php echo $args['name']?>" value="<?php echo esc_attr(get_option($args['name']));?>">
     <?php
     }
 
@@ -81,9 +83,44 @@ class ArmstrongFindARep {
     <?php
     }
 
-    function passwordHtml() { ?>
-        <input type="text" name="arm-fr-password" value="<?php echo esc_attr(get_option('arm-fr-password'));?>">
+    function productLineHTML($args) { 
+        $prod_options = $args['productLineValues'];
+        $options = get_option('arm-fr-product-line');
+        $arm_fr_product_line = isset( $options )
+        ? (array) $options : [];
+
+        foreach($prod_options as $checkbox) { ?>
+            <div>
+                <label>
+                    <input type="checkbox" name="arm-fr-product-line[]" value="<?php echo $checkbox; ?>" <?php checked(in_array($checkbox, $arm_fr_product_line), 1) ?> >
+                <?php echo $checkbox; ?></label>
+            </div>
     <?php
+        }
+    }
+
+    function industriesHTML($args) { 
+        $ind_options = $args['industryValues'];
+        $options = get_option('arm-fr-industry');
+        $arm_fr_industry = isset( $options )
+        ? (array) $options : [];
+
+        foreach($ind_options as $checkbox) { ?>
+            <div>
+                <label>
+                    <input type="checkbox" name="arm-fr-industry[]" value="<?php echo $checkbox; ?>" <?php checked(in_array($checkbox, $arm_fr_industry), 1) ?> >
+                <?php echo $checkbox; ?></label>
+            </div>
+    <?php
+        }
+    }
+
+    function validateOptions($inputs) {
+        $sanitized_input = array();
+        foreach($inputs as $input) {
+            array_push($sanitized_input, sanitize_text_field( $input ));
+        }
+        return $sanitized_input;
     }
 
     function add_admin_page() {
@@ -111,6 +148,7 @@ class ArmstrongFindARep {
         wp_enqueue_style('arm-fr-style', ARMFR_URL . '/build/index.css');
         return $output;
     }
+
     //Helpful Article: https://ghostinspector.com/blog/develop-wordpress-plugin-with-webpack-and-react/
     function build_proxy_token(WP_REST_Request $request) {
         // Setup Query Params for API Call To Get Salesforce Token
