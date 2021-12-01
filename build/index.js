@@ -3577,7 +3577,9 @@ function App() {
   const [fields, setFields] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({});
   const [data, setData] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)([]);
   const [isLoading, setIsLoading] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
+  const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
+    // axios.defaults.headers.common["X-WP-Nonce"] = armObj.nonce
     const options = {
       method: "get",
       url: armObj.urls.proxyTest,
@@ -3586,6 +3588,7 @@ function App() {
     axios__WEBPACK_IMPORTED_MODULE_3___default()(options).then(response => {
       setToken(response.data);
     }).catch(error => {
+      setError(true);
       console.log(error);
     });
   }, []);
@@ -3604,15 +3607,20 @@ function App() {
     const body = {
       token: token,
       data: {
-        acctInfo: {
-          name: `${fields.firstName} ${fields.lastName}`,
-          // email: fields.email,
-          city: fields.city,
-          state: fields.state,
-          postalCode: fields.postalCode,
-          country: fields.country,
-          productLine: fields.productLine,
-          industryType: fields.industry
+        account: {
+          acctInfo: {
+            name: `${fields.firstName} ${fields.lastName}`,
+            city: fields.city,
+            state: fields.state,
+            postalCode: fields.postalCode,
+            country: fields.country,
+            productLine: fields.productLine,
+            industryType: fields.industry
+          }
+        },
+        entryInfo: {
+          email: fields.email,
+          company: fields.company
         }
       }
     };
@@ -3633,6 +3641,7 @@ function App() {
     })));
   };
 
+  if (error) return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, "You do not have access to this page.");
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "armfr-container"
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_components_RepForm__WEBPACK_IMPORTED_MODULE_4__["default"], {

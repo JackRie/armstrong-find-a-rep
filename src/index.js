@@ -11,8 +11,10 @@ function App() {
 	const [fields, setFields] = useState({})
 	const [data, setData] = useState([])
 	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState(false)
 
 	useEffect(() => {
+		// axios.defaults.headers.common["X-WP-Nonce"] = armObj.nonce
 		const options = {
 			method: "get",
 			url: armObj.urls.proxyTest,
@@ -23,6 +25,7 @@ function App() {
 				setToken(response.data)
 			})
 			.catch(error => {
+				setError(true)
 				console.log(error)
 			})
 	}, [])
@@ -39,15 +42,20 @@ function App() {
 		const body = {
 			token: token,
 			data: {
-				acctInfo: {
-					name: `${fields.firstName} ${fields.lastName}`,
-					// email: fields.email,
-					city: fields.city,
-					state: fields.state,
-					postalCode: fields.postalCode,
-					country: fields.country,
-					productLine: fields.productLine,
-					industryType: fields.industry,
+				account: {
+					acctInfo: {
+						name: `${fields.firstName} ${fields.lastName}`,
+						city: fields.city,
+						state: fields.state,
+						postalCode: fields.postalCode,
+						country: fields.country,
+						productLine: fields.productLine,
+						industryType: fields.industry,
+					},
+				},
+				entryInfo: {
+					email: fields.email,
+					company: fields.company,
 				},
 			},
 		}
@@ -67,6 +75,8 @@ function App() {
 			})
 		Array.from(document.querySelectorAll(".field")).forEach(field => setFields(values => ({ ...values, [field.name]: "" })))
 	}
+
+	if (error) return <h2>You do not have access to this page.</h2>
 
 	return (
 		<div className="armfr-container">

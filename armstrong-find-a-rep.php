@@ -20,6 +20,8 @@ if( ! defined('ABSPATH') ) exit; //Exit if accessed directly
 //  Define plugin constants
 define('ARMFR_PATH', trailingslashit( plugin_dir_path(__FILE__) ));
 define('ARMFR_URL', trailingslashit( plugins_url('/', __FILE__) ));
+// Include ACF & Settings for Entries
+include_once( ARMFR_PATH . '/inc/acf-settings.php' );
 
 class ArmstrongFindARep {
     function __construct() {
@@ -28,6 +30,9 @@ class ArmstrongFindARep {
         add_action('admin_init', array($this, 'settings_fields') );
         add_shortcode( 'find-a-rep-form', array($this, 'form_shortcode') );
         add_action('rest_api_init', array($this, 'create_rest_route'));
+        add_action('init', array($this, 'entries'));
+        add_filter('manage_edit-find-a-rep-entries_columns', array($this, 'entry_column_headers'));
+        add_filter('manage_find-a-rep-entries_posts_custom_column', array($this, 'entry_column_data'), 1, 2);
     }
 
     function styles_and_scripts() {
@@ -42,6 +47,63 @@ class ArmstrongFindARep {
               'industries' => get_option('arm-fr-industry')
         ));
         wp_register_style('arm-fr-style', ARMFR_URL . '/build/index.css');
+    }
+
+    function entries() {
+        $labels = array(
+            'name' => 'Find a Rep Entries',
+            'add_new_item' => 'Add New Entry',
+            'edit_item' => 'Edit Entry',
+            'all_items' => 'All Entries',
+            'singular_name' => 'Entry'
+        );
+        $args = array(
+            'public' => false,
+            'show_ui' => true,
+            'supports' => array('title'),
+            'labels' => $labels,
+            'menu_icon' => 'dashicons-list-view'
+        );
+        register_post_type('find-a-rep-entries', $args);
+    }
+
+    function entry_column_headers($columns) {
+        $columns = array(
+            'cb'    => '<input type="checkbox" />', 
+            'title' => __('Name'), 
+            'email' => __('Email Address'),
+            'company' => __('Company'),
+            'productLine' => __('Product Line'),
+            'industry' => __('Industry'),
+            'date' => __('Date')
+        );
+    
+        return $columns;
+    }
+
+    function entry_column_data($column, $post_id) {
+        $output = '';
+
+        switch( $column ) {
+            case 'email' :
+                $email = get_field( 'email', $post_id );
+                $output .= $email;
+            break;
+            case 'company' :
+                $company = get_field( 'company', $post_id );
+                $output .= $company;
+            break;
+            case 'productLine' :
+                $productLine = get_field( 'product_line', $post_id );
+                $output .= $productLine;
+            break;
+            case 'industry' :
+                $industry = get_field( 'industry', $post_id );
+                $output .= $industry;
+            break;
+        }
+    
+        echo $output;
     }
 
     function settings_fields() {
@@ -179,7 +241,7 @@ class ArmstrongFindARep {
         // Get Data From Our WP REST POST Request
         $body = $request->get_params();
         // JSON Encode To Use In Body Of Request Below
-        $acctInfo = json_encode($body['data']);
+        $acctInfo = json_encode($body['data']['account']);
         // Grab Token From Body
         $token = $body['token'];
         // Create Remote Post To Receive Response For Reps
@@ -192,6 +254,25 @@ class ArmstrongFindARep {
             ),
             'body' => $acctInfo
         ));
+        // Record Entry
+        $accData = $body['data']['account']['acctInfo'];
+        $entData = $body['data']['entryInfo'];
+        wp_insert_post(array(
+            'post_type' => 'find-a-rep-entries',
+            'post_status' => 'publish',
+            'post_title' => sanitize_text_field( $accData['name'] ),
+            'meta_input' => array(
+                'product_line' => sanitize_text_field( $accData['productLine'] ),
+                'industry' => sanitize_text_field( $accData['industryType'] ),
+                'email' => sanitize_text_field( $entData['email'] ),
+                'company' => sanitize_text_field( $entData['company'] ),
+                'postal_code' => sanitize_text_field( $accData['postalCode'] ),
+                'city' => sanitize_text_field( $accData['city'] ),
+                'state' => sanitize_text_field( $accData['state'] ),
+                'country' => sanitize_text_field( $accData['country'] ),
+                )
+            )
+        );
         // Return Rep Repsonse
         return json_decode(wp_remote_retrieve_body($request));
     }
@@ -201,10 +282,12 @@ class ArmstrongFindARep {
         register_rest_route( 'armstrong-international/v1', '/proxy-token', array(
             'methods'  => WP_REST_Server::READABLE,
             'callback' => array($this, 'build_proxy_token'),
+            'permission_callback' => '__return_true'
         ) );
         register_rest_route( 'armstrong-international/v1', '/proxy', array(
             'methods'  => WP_REST_Server::EDITABLE,
             'callback' => array($this, 'build_proxy'),
+            'permission_callback' => '__return_true'
         ) );
     }
 
